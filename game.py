@@ -14,7 +14,6 @@ class Player:
         speed = 2
         self.walking = False
 
-        # Movimento
         if keyboard.left:
             self.actor.x -= speed
             self.walking = True
@@ -22,13 +21,11 @@ class Player:
             self.actor.x += speed
             self.walking = True
 
-        # Pulo
         if keyboard.space and self.ground:
             self.velocity_y = -15
             self.ground = False
 
-        # Gravidade
-        self.velocity_y += 1  # força da gravidade
+        self.velocity_y += 1
         self.actor.y += self.velocity_y
 
         floor = 245
@@ -62,16 +59,45 @@ class Player:
         self.actor.draw()
 
 
+class Background:
+    def __init__(self, image_name, y=0, scroll_speed=4):
+        self.image_name = image_name
+        self.y = y
+        self.scroll_speed = scroll_speed
+
+        self.width = 512
+        self.image_left_x = 0
+        self.image_right_x = self.width
+
+    def update(self):
+        self.image_left_x -= self.scroll_speed
+        self.image_right_x -= self.scroll_speed
+
+        if self.image_left_x + self.width <= 0:
+            self.image_left_x = self.image_right_x + self.width
+        if self.image_right_x + self.width <= 0:
+            self.image_right_x = self.image_left_x + self.width
+
+    def draw(self):
+        screen.blit(self.image_name, (self.image_left_x, self.y))
+        screen.blit(self.image_name, (self.image_right_x, self.y))
 
 
 WIDTH = 512
 HEIGHT = 400
 
+background_hills = Background("background_color_hills", y=0, scroll_speed=1)
+background_ground = Background("terrain", y=300, scroll_speed=3)
+
+
 player = Player(100, 200)
 def update():
     player.update(keyboard)
+    background_hills.update()
+    background_ground.update()
 
 def draw():
     screen.clear()
-    # desenhar cenário, plataformas, etc.
+    background_hills.draw()
+    background_ground.draw()
     player.draw()
