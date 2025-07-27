@@ -9,9 +9,11 @@ class Player:
         self.ground = False
         self.walking = False
         self.idle_animating = True
+        self.lives = 3
+        self.damage_cooldown = False
 
     def update(self, keyboard):
-        speed = 2
+        speed = 5
         self.walking = False
 
         if keyboard.left:
@@ -22,13 +24,13 @@ class Player:
             self.walking = True
 
         if keyboard.space and self.ground:
-            self.velocity_y = -15
+            self.velocity_y = -17
             self.ground = False
 
         self.velocity_y += 1
         self.actor.y += self.velocity_y
 
-        floor = 245
+        floor = 259
         if self.actor.y > floor:
             self.actor.y = floor
             self.velocity_y = 0
@@ -54,10 +56,23 @@ class Player:
             if self.frame_counter % 30 == 0:
                 self.sprite_index = (self.sprite_index + 1) % len(self.images_idle)
                 self.actor.image = self.images_idle[self.sprite_index]
+    
+    def set_player_normal(self):
+        self.actor.image = 'p_idle1'
+
+    def set_player_hit(self):
+        self.actor.image = 'p_hit'
+        clock.schedule_unique(self.set_player_normal, 1.0)
 
     def draw(self):
         self.actor.draw()
 
+    def damage(self, enemy):
+        if enemy.collides_with(self.actor) and self.lives > 0 and not self.damage_cooldown:
+            self.lives -= 1
+            print(f"Lives left: {self.lives}")
+            self.set_player_hit()
+            self.damage_cooldown = True
 
 class Background:
     def __init__(self, image_name, y=0, scroll_speed=4):
@@ -82,6 +97,34 @@ class Background:
         screen.blit(self.image_name, (self.image_left_x, self.y))
         screen.blit(self.image_name, (self.image_right_x, self.y))
 
+class Enemy:
+    def __init__(self, x, y, speed=2):
+        self.actor = Actor("snail_rest", (x, y))
+        self.speed = speed
+        self.sprite_index = 0
+        self.frame_count = 0
+        self.walk_images = ["snail_walk_a", "snail_walk_b", ]
+
+    def update(self):
+        # Move para a direita
+        self.actor.x -= self.speed
+
+        # Saiu da tela à direita → volta pela esquerda
+        if self.actor.right < 0:
+            self.actor.left = WIDTH + 50
+            self.speed += 0.15
+
+        # Animação de caminhada
+        self.frame_count += 1
+        if self.frame_count % 10 == 0:
+            self.sprite_index = (self.sprite_index + 1) % len(self.walk_images)
+            self.actor.image = self.walk_images[self.sprite_index]
+
+    def draw(self):
+        self.actor.draw()
+
+    def collides_with(self, other_actor):
+        return self.actor.colliderect(other_actor)
 
 WIDTH = 512
 HEIGHT = 400
@@ -91,13 +134,48 @@ background_ground = Background("terrain", y=300, scroll_speed=3)
 
 
 player = Player(100, 200)
+enemy = Enemy(500, 283)
+score = 0
+frame_counter = 0
+game_over = False
+playerDamage_cooldown = False
+playerDamage_cooldownFrames = 0 
 def update():
+    global score, frame_counter, game_over, playerDamageCooldown, playerDamage_cooldownFrames
+
+    if game_over:
+        return
+    
+    if player.damage_cooldown:
+        playerDamage_cooldownFrames += 1
+        if playerDamage_cooldownFrames >= 90:
+            player.damage_cooldown = False
+            playerDamage_cooldownFrames = 0
+
+    frame_counter += 1
+    if frame_counter >= 40:
+        score += 1
+        frame_counter = 0
+
     player.update(keyboard)
     background_hills.update()
     background_ground.update()
+
+    enemy.update()
+    player.damage(enemy)
+
+    if player.lives <= 0:
+        game_over = True
+
 
 def draw():
     screen.clear()
     background_hills.draw()
     background_ground.draw()
+    screen.draw.text(f"Score: {score}", center=(WIDTH // 2, 30), fontsize=30, color="white", owidth=1.0, ocolor="black")
+
     player.draw()
+    for i in range (player.lives):
+        screen.blit("hud_heart", (10 + i * 40, 10))
+    
+    enemy.draw()
