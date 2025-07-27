@@ -28,9 +28,6 @@ class Menu:
         elif self.button_exit.collidepoint(pos):
             exit()
 
-    def play_theme_loop():
-            music.play("theme")
-            clock.schedule(play_theme_loop, 30.0)
 
     def reset_game(self):
         global score, player, enemy
