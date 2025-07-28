@@ -6,7 +6,7 @@ Este projeto faz parte de um projeto seletivo no qual estou participando
 
 ## Como rodar o projeto em sua máquina
 
-Para rodar este projeto, você precisa ter o Python instalado em sua máquina.
+Para rodar este projeto, você precisa ter o [Python](https://www.python.org/downloads/) instalado em sua máquina.
 Após instalar o Python e garantir que está tudo configurado corretamente, abra o Prompt de Comando e digite o seguinte comando para instalar o PgZero:
 ```bash
 pip install pgzero
